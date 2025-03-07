@@ -3,7 +3,7 @@ import { database } from "../data/firebaseConfig.js";
 // Lấy danh sách tất cả requests từ Firebase
 export const getRequests = async (req, res) => {
   try {
-    const requestRef = database.ref("ExtractBill");
+    const requestRef = database.ref("categories");
     const snapshot = await requestRef.once("value");
 
     if (!snapshot.exists()) {
@@ -16,3 +16,5 @@ export const getRequests = async (req, res) => {
     res.status(500).json({ error: "Lỗi khi lấy dữ liệu" });
   }
 };
+
+
