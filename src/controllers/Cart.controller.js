@@ -90,14 +90,15 @@ export const addCart = async (req, res) => {
     }
 
     if (!itemExists) {
+      console.log("Chưa tồn tại");
       // **Sản phẩm chưa có, thêm mới**
       const newItemRef = cartRef.push();
       await newItemRef.set({
-        pro_ID: selectedProduct.proID,
+        pro_ID: selectedProduct.pro_ID,
         pro_name: selectedProduct.pro_name,
         pro_price: selectedProduct.pro_price,
         pro_img: selectedProduct.pro_img,
-        pro_quantity: 1, // Mặc định số lượng 1 nếu mới thêm
+        pro_quantity: 1,
       });
     }
 
