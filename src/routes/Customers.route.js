@@ -1,6 +1,9 @@
 import express from "express";
 import {
   getRequests,
+  addRequest,
+  deleteRequest,
+  updateRequest,
   getUserInfo,
 } from "../controllers/Customers.controller.js";
 
