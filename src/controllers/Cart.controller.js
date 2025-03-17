@@ -108,3 +108,14 @@ export const addCart = async (req, res) => {
     res.status(500).json({ error: "Lỗi server" });
   }
 };
+
+export const clearCart = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await database.ref(`carts/${id}`).remove();
+    console.log(`Đã xóa toàn bộ sản phẩm trong giỏ hàng của user ${id}`);
+    return res.status(200).json({ message: "Xóa thành công!" });
+  } catch (error) {
+    console.error("Lỗi khi xóa giỏ hàng:", error);
+  }
+};
