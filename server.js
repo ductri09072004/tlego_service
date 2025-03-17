@@ -1,12 +1,14 @@
 import express, { json } from "express";
 import cors from "cors";
 import cartRoute from "./src/routes/Cart.route.js";
+import proRoutes from "./src/routes/Products.route.js";
 import cusRoutes from "./src/routes/Customers.route.js";
 import orderRoutes from "./src/routes/Orderdetail.route.js";
-import orderItemRoutes from "./src/routes/Orderitem.route.js";
 import cateRoutes from "./src/routes/Categories.route.js";
+import orderItemRoutes from "./src/routes/Orderitem.route.js";
 import proRoutes from "./src/routes/Products.route.js";
 import ratRoutes from "./src/routes/rating.route.js";
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
