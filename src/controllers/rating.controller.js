@@ -3,7 +3,7 @@ import { database } from "../data/firebaseConfig.js";
 // Lấy danh sách tất cả requests từ Firebase
 export const getRequests = async (req, res) => {
   try {
-    const requestRef = database.ref("orderdetail");
+    const requestRef = database.ref("rating");
     const snapshot = await requestRef.once("value");
 
     if (!snapshot.exists()) {
@@ -21,34 +21,20 @@ export const getRequests = async (req, res) => {
 export const addRequest = async (req, res) => {
   try {
     const { 
-      cus_id,
-      deliveryFee,
-      order_date,
-      order_expected_day,
       order_id,
-      order_img,
-      order_price,
-      order_status,
-      pro_name,
-      total_price
-    } = req.body;
+      order_rating,
+      order_review,
+       } = req.body;
 
-    if (!deliveryFee|| !cus_id ||!order_date||!order_expected_day||! order_id||!order_img||!order_price||!order_status||!pro_name||!total_price) {
+    if ( !order_id|| !order_rating|| !order_review) {
       return res.status(400).json({ error: "Thiếu thông tin giao dịch" });
     }
 
-    const requestRef = database.ref("orderdetail").push();
+    const requestRef = database.ref("rating").push();
     await requestRef.set({
-      cus_id,
-      deliveryFee,
-      order_date,
-      order_expected_day,
-      order_id,
-      order_img,
-      order_price,
-      order_status,
-      pro_name,
-      total_price
+        order_id,
+        order_rating,
+        order_review,
     });
 
     res.status(201).json({ message: "Giao dịch đã được thêm", id: requestRef.key });
@@ -66,7 +52,7 @@ export const deleteRequest = async (req, res) => {
       return res.status(400).json({ error: "Thiếu ID danh mục" });
     }
 
-    const requestRef = database.ref(`orderdetail/${id}`);
+    const requestRef = database.ref(`rating/${id}`);
     const snapshot = await requestRef.once("value");
 
     if (!snapshot.exists()) {
@@ -91,7 +77,7 @@ export const updateRequest = async (req, res) => {
         return res.status(400).json({ error: "Thiếu ID giao dịch" });
       }
   
-      const requestRef = database.ref(`orderdetail/${id}`);
+      const requestRef = database.ref(`rating/${id}`);
       const snapshot = await requestRef.once("value");
   
       if (!snapshot.exists()) {
@@ -105,47 +91,5 @@ export const updateRequest = async (req, res) => {
       res.status(500).json({ error: "Lỗi khi cập nhật giao dịch" });
     }
 };
-
-//xóa theo orderid
-export const deleteIDRequest = async (req, res) => {
-  try {
-    const { order_id } = req.params; // Nhận order_id từ URL
-
-    if (!order_id) {
-      return res.status(400).json({ error: "Thiếu order_id" });
-    }
-
-    const orderRef = database.ref("orderdetail");
-    const snapshot = await orderRef.once("value");
-
-    if (!snapshot.exists()) {
-      return res.status(404).json({ error: "Danh mục không tồn tại" });
-    }
-
-    let orderKeyToDelete = null;
-
-    // Tìm key của đơn hàng có order_id tương ứng
-    snapshot.forEach((childSnapshot) => {
-      const orderData = childSnapshot.val();
-      if (orderData.order_id === order_id) {
-        orderKeyToDelete = childSnapshot.key;
-      }
-    });
-
-    if (!orderKeyToDelete) {
-      return res.status(404).json({ error: "Không tìm thấy đơn hàng với order_id này" });
-    }
-
-    // Xóa đơn hàng theo key
-    await database.ref(`orderdetail/${orderKeyToDelete}`).remove();
-
-    res.status(200).json({ message: "Đơn hàng đã được xóa thành công" });
-  } catch (error) {
-    console.error("Lỗi khi xóa đơn hàng:", error);
-    res.status(500).json({ error: "Lỗi khi xóa đơn hàng" });
-  }
-};
-
-
 
 

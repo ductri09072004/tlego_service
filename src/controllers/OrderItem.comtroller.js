@@ -94,3 +94,43 @@ export const updateRequest = async (req, res) => {
     }
 };
 
+//xóa item theo id
+export const deleteIDRequest = async (req, res) => {
+  try {
+    const { order_id } = req.params; // Nhận order_id từ URL
+
+    if (!order_id) {
+      return res.status(400).json({ error: "Thiếu orderitem_id" });
+    }
+
+    const orderRef = database.ref("orderitem");
+    const snapshot = await orderRef.once("value");
+
+    if (!snapshot.exists()) {
+      return res.status(404).json({ error: "Danh mục không tồn tại" });
+    }
+
+    let orderKeyToDelete = null;
+
+    // Tìm key của đơn hàng có order_id tương ứng
+    snapshot.forEach((childSnapshot) => {
+      const orderData = childSnapshot.val();
+      if (orderData.order_id === order_id) {
+        orderKeyToDelete = childSnapshot.key;
+      }
+    });
+
+    if (!orderKeyToDelete) {
+      return res.status(404).json({ error: "Không tìm thấy đơn hàng với order_id này" });
+    }
+
+    // Xóa đơn hàng theo key
+    await database.ref(`orderitem/${orderKeyToDelete}`).remove();
+
+    res.status(200).json({ message: "Đơn hàng đã được xóa thành công" });
+  } catch (error) {
+    console.error("Lỗi khi xóa đơn hàng:", error);
+    res.status(500).json({ error: "Lỗi khi xóa đơn hàng" });
+  }
+};
+
