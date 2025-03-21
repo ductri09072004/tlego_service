@@ -24,10 +24,12 @@ export const addRequest = async (req, res) => {
       order_price,
       order_quantity,
       pro_name,
+      pro_img,
+      pro_ID,
      
     } = req.body;
 
-    if (!order_id||!order_price||!pro_name||!order_quantity) {
+    if (!order_id||!order_price||!pro_name||!order_quantity || !pro_ID || !pro_img) {
       return res.status(400).json({ error: "Thiếu thông tin giao dịch" });
     }
 
@@ -36,7 +38,9 @@ export const addRequest = async (req, res) => {
       order_id,
       order_price,
       order_quantity,
-      pro_name
+      pro_name,
+      pro_img,
+      pro_ID,
     });
 
     res.status(201).json({ message: "Giao dịch đã được thêm", id: requestRef.key });

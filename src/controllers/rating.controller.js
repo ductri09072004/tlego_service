@@ -22,17 +22,19 @@ export const addRequest = async (req, res) => {
   try {
     const { 
       order_id,
+      pro_ID,
       order_rating,
       order_review,
        } = req.body;
 
-    if ( !order_id|| !order_rating|| !order_review) {
+    if ( !order_id|| !order_rating|| !order_review || !pro_ID) {
       return res.status(400).json({ error: "Thiếu thông tin giao dịch" });
     }
 
     const requestRef = database.ref("rating").push();
     await requestRef.set({
         order_id,
+        pro_ID,
         order_rating,
         order_review,
     });
