@@ -20,7 +20,7 @@ export const getRequests = async (req, res) => {
 // thêm danh sách
 export const addRequest = async (req, res) => {
   try {
-    const { 
+    const {
       cus_id,
       deliveryFee,
       order_date,
@@ -30,10 +30,21 @@ export const addRequest = async (req, res) => {
       order_price,
       order_status,
       pro_name,
-      total_price
+      total_price,
     } = req.body;
 
-    if (!deliveryFee|| !cus_id ||!order_date||!order_expected_day||! order_id||!order_img||!order_price||!order_status||!pro_name||!total_price) {
+    if (
+      !deliveryFee ||
+      !cus_id ||
+      !order_date ||
+      !order_expected_day ||
+      !order_id ||
+      !order_img ||
+      !order_price ||
+      !order_status ||
+      !pro_name ||
+      !total_price
+    ) {
       return res.status(400).json({ error: "Thiếu thông tin giao dịch" });
     }
 
@@ -48,10 +59,12 @@ export const addRequest = async (req, res) => {
       order_price,
       order_status,
       pro_name,
-      total_price
+      total_price,
     });
 
-    res.status(201).json({ message: "Giao dịch đã được thêm", id: requestRef.key });
+    res
+      .status(201)
+      .json({ message: "Giao dịch đã được thêm", id: requestRef.key });
   } catch (error) {
     console.error("Lỗi khi thêm giao dịch:", error);
     res.status(500).json({ error: "Lỗi khi thêm giao dịch" });
@@ -83,27 +96,27 @@ export const deleteRequest = async (req, res) => {
 
 // Cập nhật giao dịch
 export const updateRequest = async (req, res) => {
-    try {
-      const { id } = req.params;
-      const updatedData = req.body;
-  
-      if (!id) {
-        return res.status(400).json({ error: "Thiếu ID giao dịch" });
-      }
-  
-      const requestRef = database.ref(`orderdetail/${id}`);
-      const snapshot = await requestRef.once("value");
-  
-      if (!snapshot.exists()) {
-        return res.status(404).json({ error: "Giao dịch không tồn tại" });
-      }
-  
-      await requestRef.update(updatedData);
-      res.status(200).json({ message: "Giao dịch đã được cập nhật" });
-    } catch (error) {
-      console.error("Lỗi khi cập nhật giao dịch:", error);
-      res.status(500).json({ error: "Lỗi khi cập nhật giao dịch" });
+  try {
+    const { id } = req.params;
+    const updatedData = req.body;
+
+    if (!id) {
+      return res.status(400).json({ error: "Thiếu ID giao dịch" });
     }
+
+    const requestRef = database.ref(`orderdetail/${id}`);
+    const snapshot = await requestRef.once("value");
+
+    if (!snapshot.exists()) {
+      return res.status(404).json({ error: "Giao dịch không tồn tại" });
+    }
+
+    await requestRef.update(updatedData);
+    res.status(200).json({ message: "Giao dịch đã được cập nhật" });
+  } catch (error) {
+    console.error("Lỗi khi cập nhật giao dịch:", error);
+    res.status(500).json({ error: "Lỗi khi cập nhật giao dịch" });
+  }
 };
 
 //xóa theo orderid
@@ -133,7 +146,9 @@ export const deleteIDRequest = async (req, res) => {
     });
 
     if (!orderKeyToDelete) {
-      return res.status(404).json({ error: "Không tìm thấy đơn hàng với order_id này" });
+      return res
+        .status(404)
+        .json({ error: "Không tìm thấy đơn hàng với order_id này" });
     }
 
     // Xóa đơn hàng theo key
@@ -146,6 +161,73 @@ export const deleteIDRequest = async (req, res) => {
   }
 };
 
+export const addRequestForGuest = async (req, res) => {
+  try {
+    const {
+      pro_ID,
+      order_id,
+      guest_phone,
+      guest_fullname,
+      guest_provicecity,
+      guest_district,
+      guest_wardcommue,
+      guest_streethouse,
+      deliveryFee,
+      order_date,
+      order_img,
+      order_price,
+      order_status,
+      pro_name,
+      total_price,
+    } = req.body;
 
+    // Kiểm tra nếu thiếu dữ liệu quan trọng
+    if (
+      !pro_ID ||
+      !order_id ||
+      !guest_phone ||
+      !guest_fullname ||
+      !guest_provicecity ||
+      !guest_district ||
+      !guest_wardcommue ||
+      !guest_streethouse ||
+      !deliveryFee ||
+      !order_date ||
+      !order_img ||
+      !order_price ||
+      !order_status ||
+      !pro_name ||
+      !total_price
+    ) {
+      return res.status(400).json({ error: "Thiếu thông tin giao dịch" });
+    }
 
+    // Thêm dữ liệu vào Firebase Realtime Database
+    const requestRef = database.ref("orderdetailguest").push();
+    await requestRef.set({
+      pro_ID,
+      order_id,
+      guest_phone,
+      guest_fullname,
+      guest_provicecity,
+      guest_district,
+      guest_wardcommue,
+      guest_streethouse,
+      deliveryFee,
+      order_date,
+      order_img,
+      order_price,
+      order_status,
+      pro_name,
+      total_price,
+      created_at: new Date().toISOString(), // Lưu timestamp
+    });
 
+    res
+      .status(201)
+      .json({ message: "Giao dịch đã được thêm", id: requestRef.key });
+  } catch (error) {
+    console.error("Lỗi khi thêm giao dịch:", error);
+    res.status(500).json({ error: "Lỗi khi thêm giao dịch" });
+  }
+};

@@ -17,29 +17,56 @@ export const getRequests = async (req, res) => {
   }
 };
 
+// Lấy rating theo id
+export const getRatingById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ error: "Thiếu pro_ID" });
+    }
+
+    const orderRef = database.ref("rating");
+    const snapshot = await orderRef
+      .orderByChild("pro_ID")
+      .equalTo(id)
+      .once("value");
+
+    if (!snapshot.exists()) {
+      return res.status(404).json({ error: "Không tìm thấy đơn hàng" });
+    }
+
+    const orders = [];
+    snapshot.forEach((child) => {
+      orders.push({ id: child.key, ...child.val() });
+    });
+
+    res.status(200).json({ orders });
+  } catch (error) {
+    console.error("Lỗi khi lấy dữ liệu:", error);
+    res.status(500).json({ error: "Lỗi khi lấy dữ liệu" });
+  }
+};
+
 // thêm danh sách
 export const addRequest = async (req, res) => {
   try {
-    const { 
-      order_id,
-      pro_ID,
-      order_rating,
-      order_review,
-       } = req.body;
+    const { pro_ID, order_rating, order_review } = req.body;
 
-    if ( !order_id|| !order_rating|| !order_review || !pro_ID) {
+    if (!order_rating || !order_review || !pro_ID) {
       return res.status(400).json({ error: "Thiếu thông tin giao dịch" });
     }
 
     const requestRef = database.ref("rating").push();
     await requestRef.set({
-        order_id,
-        pro_ID,
-        order_rating,
-        order_review,
+      pro_ID,
+      order_rating,
+      order_review,
     });
 
-    res.status(201).json({ message: "Giao dịch đã được thêm", id: requestRef.key });
+    res
+      .status(201)
+      .json({ message: "Giao dịch đã được thêm", id: requestRef.key });
   } catch (error) {
     console.error("Lỗi khi thêm giao dịch:", error);
     res.status(500).json({ error: "Lỗi khi thêm giao dịch" });
@@ -71,27 +98,25 @@ export const deleteRequest = async (req, res) => {
 
 // Cập nhật giao dịch
 export const updateRequest = async (req, res) => {
-    try {
-      const { id } = req.params;
-      const updatedData = req.body;
-  
-      if (!id) {
-        return res.status(400).json({ error: "Thiếu ID giao dịch" });
-      }
-  
-      const requestRef = database.ref(`rating/${id}`);
-      const snapshot = await requestRef.once("value");
-  
-      if (!snapshot.exists()) {
-        return res.status(404).json({ error: "Giao dịch không tồn tại" });
-      }
-  
-      await requestRef.update(updatedData);
-      res.status(200).json({ message: "Giao dịch đã được cập nhật" });
-    } catch (error) {
-      console.error("Lỗi khi cập nhật giao dịch:", error);
-      res.status(500).json({ error: "Lỗi khi cập nhật giao dịch" });
+  try {
+    const { id } = req.params;
+    const updatedData = req.body;
+
+    if (!id) {
+      return res.status(400).json({ error: "Thiếu ID giao dịch" });
     }
+
+    const requestRef = database.ref(`rating/${id}`);
+    const snapshot = await requestRef.once("value");
+
+    if (!snapshot.exists()) {
+      return res.status(404).json({ error: "Giao dịch không tồn tại" });
+    }
+
+    await requestRef.update(updatedData);
+    res.status(200).json({ message: "Giao dịch đã được cập nhật" });
+  } catch (error) {
+    console.error("Lỗi khi cập nhật giao dịch:", error);
+    res.status(500).json({ error: "Lỗi khi cập nhật giao dịch" });
+  }
 };
-
-

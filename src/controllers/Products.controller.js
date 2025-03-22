@@ -20,7 +20,7 @@ export const getRequests = async (req, res) => {
 // thêm danh sách
 export const addRequest = async (req, res) => {
   try {
-    const { 
+    const {
       block_count,
       cate_id,
       old,
@@ -30,10 +30,21 @@ export const addRequest = async (req, res) => {
       pro_name,
       pro_price,
       pro_stock,
-      sales_count
+      sales_count,
     } = req.body;
 
-    if (!block_count|| !cate_id ||!old||!pro_ID||! pro_description||!pro_img||!pro_price||!pro_stock||!pro_name||!sales_count) {
+    if (
+      !block_count ||
+      !cate_id ||
+      !old ||
+      !pro_ID ||
+      !pro_description ||
+      !pro_img ||
+      !pro_price ||
+      !pro_stock ||
+      !pro_name ||
+      !sales_count
+    ) {
       return res.status(400).json({ error: "Thiếu thông tin giao dịch" });
     }
 
@@ -48,10 +59,12 @@ export const addRequest = async (req, res) => {
       pro_name,
       pro_price,
       pro_stock,
-      sales_count
+      sales_count,
     });
 
-    res.status(201).json({ message: "Giao dịch đã được thêm", id: requestRef.key });
+    res
+      .status(201)
+      .json({ message: "Giao dịch đã được thêm", id: requestRef.key });
   } catch (error) {
     console.error("Lỗi khi thêm giao dịch:", error);
     res.status(500).json({ error: "Lỗi khi thêm giao dịch" });
@@ -83,29 +96,52 @@ export const deleteRequest = async (req, res) => {
 
 // Cập nhật giao dịch
 export const updateRequest = async (req, res) => {
-    try {
-      const { id } = req.params;
-      const updatedData = req.body;
-  
-      if (!id) {
-        return res.status(400).json({ error: "Thiếu ID giao dịch" });
-      }
-  
-      const requestRef = database.ref(`products/${id}`);
-      const snapshot = await requestRef.once("value");
-  
-      if (!snapshot.exists()) {
-        return res.status(404).json({ error: "Giao dịch không tồn tại" });
-      }
-  
-      await requestRef.update(updatedData);
-      res.status(200).json({ message: "Giao dịch đã được cập nhật" });
-    } catch (error) {
-      console.error("Lỗi khi cập nhật giao dịch:", error);
-      res.status(500).json({ error: "Lỗi khi cập nhật giao dịch" });
+  try {
+    const { id } = req.params;
+    const updatedData = req.body;
+
+    if (!id) {
+      return res.status(400).json({ error: "Thiếu ID giao dịch" });
     }
+
+    const requestRef = database.ref(`products/${id}`);
+    const snapshot = await requestRef.once("value");
+
+    if (!snapshot.exists()) {
+      return res.status(404).json({ error: "Giao dịch không tồn tại" });
+    }
+
+    await requestRef.update(updatedData);
+    res.status(200).json({ message: "Giao dịch đã được cập nhật" });
+  } catch (error) {
+    console.error("Lỗi khi cập nhật giao dịch:", error);
+    res.status(500).json({ error: "Lỗi khi cập nhật giao dịch" });
+  }
 };
 
+export const getRequestById = async (req, res) => {
+  try {
+    const { id } = req.params;
 
+    if (!id) {
+      return res.status(400).json({ error: "Thiếu ID giao dịch" });
+    }
 
+    const snapshot = await database.ref("products").once("value");
+    if (snapshot.exists()) {
+      const products = snapshot.val();
 
+      const productEntry = Object.entries(products).find(
+        ([key, value]) => value.pro_ID === id
+      );
+
+      if (productEntry) {
+        return res.json({ id: productEntry[0], ...productEntry[1] });
+      }
+    }
+    res.status(404).json({ message: "Sản phẩm không tồn tại" });
+  } catch (error) {
+    console.error("Lỗi khi cập nhật giao dịch:", error);
+    res.status(500).json({ error: "Lỗi khi cập nhật giao dịch" });
+  }
+};
