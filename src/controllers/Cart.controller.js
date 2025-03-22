@@ -19,8 +19,7 @@ export const getCart = async (req, res) => {
 
 export const getCartById = async (req, res) => {
   try {
-    const { id } = req.params;
-    console.log(id);
+    const { id } = req.params;  // userId
     if (!id) {
       return res.status(400).json({ error: "Thiếu userId" });
     }
@@ -28,12 +27,18 @@ export const getCartById = async (req, res) => {
     const snapshot = await database.ref(`carts/${id}`).once("value");
 
     if (!snapshot.exists()) {
-      return res
-        .status(404)
-        .json({ error: "Không tìm thấy giỏ hàng của user này" });
+      return res.status(404).json({ error: "Không tìm thấy giỏ hàng của user này" });
     }
 
-    res.json(snapshot.val());
+    const cartData = snapshot.val();
+
+    // Chuyển đổi dữ liệu để đảm bảo có cartProId
+    const cartList = Object.entries(cartData).map(([cartProId, product]) => ({
+      cartProId,  // Đảm bảo có cartProId trong API response
+      ...product,
+    }));
+
+    res.json(cartList);
   } catch (error) {
     console.error("Lỗi khi lấy dữ liệu:", error);
     res.status(500).json({ error: "Lỗi khi lấy dữ liệu" });
@@ -119,3 +124,66 @@ export const clearCart = async (req, res) => {
     console.error("Lỗi khi xóa giỏ hàng:", error);
   }
 };
+
+export const deleteCartId = async (req, res) => {
+  const { userId, cartProId } = req.params; // cartProId là giá trị của pro_ID (71806)
+
+  if (!userId || !cartProId) {
+    return res.status(400).json({ message: "Thiếu userId hoặc pro_ID" });
+  }
+
+  try {
+    const cartRef = database.ref(`carts/${userId}`);
+
+    // Lấy danh sách sản phẩm của userId
+    const snapshot = await cartRef.once("value");
+    const cartData = snapshot.val();
+
+    if (!cartData) {
+      return res.status(404).json({ message: "Giỏ hàng trống hoặc không tồn tại." });
+    }
+
+    // Tìm key có `pro_ID` = cartProId (71806)
+    let keyToDelete = null;
+    Object.entries(cartData).forEach(([key, value]) => {
+      if (value.pro_ID === cartProId) {
+        keyToDelete = key;
+      }
+    });
+
+    if (!keyToDelete) {
+      return res.status(404).json({ message: "Không tìm thấy sản phẩm với pro_ID này." });
+    }
+
+    // Xóa sản phẩm theo key tìm được
+    await database.ref(`carts/${userId}/${keyToDelete}`).remove();
+
+    return res.status(200).json({ message: `Xóa sản phẩm có pro_ID: ${cartProId} thành công!` });
+  } catch (error) {
+    return res.status(500).json({ message: "Lỗi khi xóa sản phẩm", error: error.message });
+  }
+}
+
+export const updateCartQuantity = async (req, res) => {
+  try {
+    const { userId, cartProId } = req.params;
+    const { pro_quantity } = req.body;
+
+    const quantityNumber = parseInt(pro_quantity);
+    if (isNaN(quantityNumber) || quantityNumber < 1) {
+      return res.status(400).json({ message: "Số lượng không hợp lệ" });
+    }
+
+    const cartRef = database.ref(`carts/${userId}/${cartProId}`);
+
+    const snapshot = await cartRef.once("value");
+    if (!snapshot.exists()) {
+      return res.status(404).json({ message: "Sản phẩm không tồn tại trong giỏ hàng" });
+    }
+
+    await cartRef.update({ pro_quantity: quantityNumber });
+    return res.status(200).json({ message: `Cập nhật số lượng sản phẩm ${cartProId} thành ${quantityNumber} thành công!` });
+  } catch (error) {
+    return res.status(500).json({ message: "Lỗi khi cập nhật số lượng", error: error.message });
+  }
+}

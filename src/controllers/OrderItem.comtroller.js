@@ -19,15 +19,17 @@ export const getRequests = async (req, res) => {
 
 export const addRequest = async (req, res) => {
   try {
-    const { 
-      order_id,
-      order_price,
-      order_quantity,
-      pro_name,
-     
-    } = req.body;
+    const { order_id, order_price, order_quantity, pro_name, pro_img, pro_ID } =
+      req.body;
 
-    if (!order_id||!order_price||!pro_name||!order_quantity) {
+    if (
+      !order_id ||
+      !order_price ||
+      !pro_name ||
+      !order_quantity ||
+      !pro_ID ||
+      !pro_img
+    ) {
       return res.status(400).json({ error: "Thiếu thông tin giao dịch" });
     }
 
@@ -36,10 +38,15 @@ export const addRequest = async (req, res) => {
       order_id,
       order_price,
       order_quantity,
-      pro_name
+      pro_name,
+      pro_img,
+      pro_ID,
+      rating: false,
     });
 
-    res.status(201).json({ message: "Giao dịch đã được thêm", id: requestRef.key });
+    res
+      .status(201)
+      .json({ message: "Giao dịch đã được thêm", id: requestRef.key });
   } catch (error) {
     console.error("Lỗi khi thêm giao dịch:", error);
     res.status(500).json({ error: "Lỗi khi thêm giao dịch" });
@@ -71,27 +78,27 @@ export const deleteRequest = async (req, res) => {
 
 // Cập nhật giao dịch
 export const updateRequest = async (req, res) => {
-    try {
-      const { id } = req.params;
-      const updatedData = req.body;
-  
-      if (!id) {
-        return res.status(400).json({ error: "Thiếu ID giao dịch" });
-      }
-  
-      const requestRef = database.ref(`orderitem/${id}`);
-      const snapshot = await requestRef.once("value");
-  
-      if (!snapshot.exists()) {
-        return res.status(404).json({ error: "Giao dịch không tồn tại" });
-      }
-  
-      await requestRef.update(updatedData);
-      res.status(200).json({ message: "Giao dịch đã được cập nhật" });
-    } catch (error) {
-      console.error("Lỗi khi cập nhật giao dịch:", error);
-      res.status(500).json({ error: "Lỗi khi cập nhật giao dịch" });
+  try {
+    const { id } = req.params;
+    const updatedData = req.body;
+
+    if (!id) {
+      return res.status(400).json({ error: "Thiếu ID giao dịch" });
     }
+
+    const requestRef = database.ref(`orderitem/${id}`);
+    const snapshot = await requestRef.once("value");
+
+    if (!snapshot.exists()) {
+      return res.status(404).json({ error: "Giao dịch không tồn tại" });
+    }
+
+    await requestRef.update(updatedData);
+    res.status(200).json({ message: "Giao dịch đã được cập nhật" });
+  } catch (error) {
+    console.error("Lỗi khi cập nhật giao dịch:", error);
+    res.status(500).json({ error: "Lỗi khi cập nhật giao dịch" });
+  }
 };
 
 //xóa item theo id
@@ -121,7 +128,9 @@ export const deleteIDRequest = async (req, res) => {
     });
 
     if (!orderKeyToDelete) {
-      return res.status(404).json({ error: "Không tìm thấy đơn hàng với order_id này" });
+      return res
+        .status(404)
+        .json({ error: "Không tìm thấy đơn hàng với order_id này" });
     }
 
     // Xóa đơn hàng theo key
@@ -134,3 +143,51 @@ export const deleteIDRequest = async (req, res) => {
   }
 };
 
+export const updateRating = async (req, res) => {
+  try {
+    const { order_id, pro_ID, rating } = req.body;
+
+    if (!order_id || !pro_ID || typeof rating !== "boolean") {
+      return res
+        .status(400)
+        .json({ error: "Thiếu thông tin hoặc giá trị rating không hợp lệ" });
+    }
+
+    // 1️⃣ Tìm tất cả đơn hàng có order_id
+    const orderRef = database.ref("orderitem");
+    const snapshot = await orderRef
+      .orderByChild("order_id")
+      .equalTo(order_id)
+      .once("value");
+
+    if (!snapshot.exists()) {
+      return res.status(404).json({ error: "Không tìm thấy đơn hàng" });
+    }
+
+    // 2️⃣ Lọc tiếp để tìm đơn hàng có pro_ID trùng khớp
+    let found = false;
+    const updates = {};
+
+    snapshot.forEach((child) => {
+      const orderData = child.val();
+      if (orderData.pro_ID === pro_ID) {
+        updates[`/orderitem/${child.key}/rating`] = rating;
+        found = true;
+      }
+    });
+
+    if (!found) {
+      return res
+        .status(404)
+        .json({ error: "Không tìm thấy sản phẩm trong đơn hàng" });
+    }
+
+    // 3️⃣ Cập nhật rating
+    await database.ref().update(updates);
+
+    res.status(200).json({ message: "Cập nhật rating thành công" });
+  } catch (error) {
+    console.error("Lỗi khi cập nhật rating:", error);
+    res.status(500).json({ error: "Lỗi khi cập nhật rating" });
+  }
+};
