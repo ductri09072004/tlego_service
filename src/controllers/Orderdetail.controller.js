@@ -30,6 +30,8 @@ export const addRequest = async (req, res) => {
       order_price,
       order_status,
       pro_name,
+      payment_method,
+      payment_status,
       total_price,
     } = req.body;
 
@@ -43,6 +45,7 @@ export const addRequest = async (req, res) => {
       !order_price ||
       !order_status ||
       !pro_name ||
+      !payment_method ||
       !total_price
     ) {
       return res.status(400).json({ error: "Thiếu thông tin giao dịch" });
@@ -59,6 +62,8 @@ export const addRequest = async (req, res) => {
       order_price,
       order_status,
       pro_name,
+      payment_method,
+      payment_status,
       total_price,
     });
 
@@ -178,6 +183,8 @@ export const addRequestForGuest = async (req, res) => {
       order_price,
       order_status,
       pro_name,
+      payment_method,
+      payment_status,
       total_price,
     } = req.body;
 
@@ -197,6 +204,7 @@ export const addRequestForGuest = async (req, res) => {
       !order_price ||
       !order_status ||
       !pro_name ||
+      !payment_method ||
       !total_price
     ) {
       return res.status(400).json({ error: "Thiếu thông tin giao dịch" });
@@ -219,6 +227,8 @@ export const addRequestForGuest = async (req, res) => {
       order_price,
       order_status,
       pro_name,
+      payment_method,
+      payment_status,
       total_price,
       created_at: new Date().toISOString(), // Lưu timestamp
     });
