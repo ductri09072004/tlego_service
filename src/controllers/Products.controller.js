@@ -145,3 +145,54 @@ export const getRequestById = async (req, res) => {
     res.status(500).json({ error: "Lỗi khi cập nhật giao dịch" });
   }
 };
+
+export const searchProductByName = async (req, res) => {
+  try {
+    const { pro_name } = req.query;
+
+    if (!pro_name) {
+      return res.status(400).json({ error: "Thiếu tham số pro_name" });
+    }
+
+    const requestRef = database.ref("products");
+    const snapshot = await requestRef.once("value");
+
+    if (!snapshot.exists()) {
+      return res.status(404).json({ error: "Không có dữ liệu" });
+    }
+
+    const products = snapshot.val();
+
+    // Lọc sản phẩm theo tên và chỉ lấy `pro_name`
+    const filteredProductNames = Object.values(products)
+      .filter((product) =>
+        product.pro_name.toLowerCase().includes(pro_name.toLowerCase())
+      )
+      .map((product) => product.pro_name); // Chỉ lấy `pro_name`
+
+    res.json(filteredProductNames);
+  } catch (error) {
+    console.error("Lỗi khi tìm kiếm sản phẩm:", error);
+    res.status(500).json({ error: "Lỗi khi tìm kiếm sản phẩm" });
+  }
+};
+
+export const getAllProductNames = async (req, res) => {
+  try {
+    const requestRef = database.ref("products");
+    const snapshot = await requestRef.once("value");
+
+    if (!snapshot.exists()) {
+      return res.status(404).json({ error: "Không có dữ liệu" });
+    }
+
+    const products = snapshot.val();
+    const productNames = Object.values(products).map((product) => product.pro_name);
+
+    res.json(productNames);
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách tên sản phẩm:", error);
+    res.status(500).json({ error: "Lỗi khi lấy danh sách tên sản phẩm" });
+  }
+};
+
